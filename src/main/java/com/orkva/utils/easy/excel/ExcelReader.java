@@ -1,11 +1,11 @@
 package com.orkva.utils.easy.excel;
 
+import com.orkva.utils.easy.excel.annotation.ExcelColumn;
+import com.orkva.utils.easy.excel.parser.ExcelClassParser;
+import com.orkva.utils.easy.excel.parser.ExcelClassParserFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +14,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.text.DecimalFormat;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * ExcelReader
@@ -85,27 +89,60 @@ public class ExcelReader {
             return null;
         }
 
-        for (int cellNum = 0; ; cellNum++) {
-            final Cell cell = row.getCell(cellNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            final String cellValue = cell.getStringCellValue();
-            logger.debug("{}: {}", cell.getAddress(), cellValue);
+        Field[] declaredFields = instance.getClass().getDeclaredFields();
+        List<Field> parserFields = Arrays.stream(declaredFields)
+                .filter(field -> field.isAnnotationPresent(ExcelColumn.class))
+                .collect(Collectors.toList());
+
+        for (int cellNum = 0; cellNum < parserFields.size(); cellNum ++) {
+            Field field = parserFields.get(cellNum);
+            Cell cell = row.getCell(cellNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            final String cellValue = getCellValueAsString(cell);
+            logger.debug("{}=>{}: {}", field.getName(), cell.getAddress(), cellValue);
 
             if (cellValue == null || cellValue.isEmpty()) {
-                break;
+                continue;
             }
 
+            try {
+                setValue(instance, field, cellValue);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return instance;
     }
 
-    private static void setValue(final Object instance, final Field field, final String value)
+    private static void setValue(Object instance, Field field, String value)
             throws IllegalAccessException {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
         field.setAccessible(true);
 
-        field.set(instance, value);
+        ExcelClassParser<?> parser = ExcelClassParserFactory.getParser(field.getType());
+        if (parser == null) {
+            field.setAccessible(false);
+            String errorMsg = MessageFormat.format("Cannot find parser for {0} ", field.getType().getSimpleName());
+            logger.error(errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
+        field.set(instance, parser.parse(value));
 
         field.setAccessible(false);
+    }
+
+    private static final DecimalFormat NUMERIC_FORMATTER = new DecimalFormat("#.##");
+
+    private static String getCellValueAsString(Cell cell) {
+        final String cellValue;
+        if (CellType.NUMERIC == cell.getCellType()) {
+            cellValue = NUMERIC_FORMATTER.format(cell.getNumericCellValue());
+        } else {
+            cellValue = cell.getStringCellValue();
+        }
+        return cellValue;
     }
 
 }

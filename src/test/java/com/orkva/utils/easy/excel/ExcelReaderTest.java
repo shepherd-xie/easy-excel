@@ -1,5 +1,6 @@
 package com.orkva.utils.easy.excel;
 
+import com.orkva.utils.easy.excel.entity.Student;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,7 +14,7 @@ public class ExcelReaderTest {
 
     @Test
     public void testRead() {
-        Assert.assertNotNull(ExcelReader.read("./test.xlsx", Integer.class));
+        Assert.assertNotNull(ExcelReader.read(ClassLoader.getSystemResource("test_student.xlsx").getFile(), Student.class));
     }
 
 }
