@@ -1,6 +1,10 @@
 package com.orkva.utils.easy.excel;
 
+import com.orkva.utils.easy.excel.entity.Student;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ExcelWriterTest
@@ -12,7 +16,12 @@ public class ExcelWriterTest {
 
     @Test
     public void testWrite() {
-        ExcelWriter.write("./test.xlsx");
+        List<Student> entities = new ArrayList<>();
+        entities.add(new Student(1, "Larry"));
+        entities.add(new Student(2, "Anna"));
+        entities.add(new Student(3, "Emma"));
+        entities.add(new Student(4, "White"));
+        ExcelWriter.write(entities, "./src/test/resources/test_export.xlsx");
     }
 
 }
