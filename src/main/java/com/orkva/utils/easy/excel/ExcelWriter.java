@@ -14,7 +14,6 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -119,7 +118,7 @@ public class ExcelWriter {
             }
             ExcelSheetBuilder excelSheetBuilder = new ExcelSheetBuilder(instances, this);
             excelSheetBuilders.add(excelSheetBuilder);
-            if (instances.size() >= POI_SXSS_TRANSFER_COLUMN && !(workbook instanceof SXSSFSheet)) {
+            if (instances.size() >= POI_SXSS_TRANSFER_COLUMN && !SXSSFSheet.class.isInstance(workbook)) {
                 workbook = new SXSSFWorkbook();
             }
             return excelSheetBuilder;
@@ -293,15 +292,15 @@ public class ExcelWriter {
          * @return
          */
         private CellStyle buildCellStyle(final Field field) {
-            final ExcelColumn excelColumn = field.getDeclaredAnnotation(ExcelColumn.class);
-            final CellStyle cellStyle = columnCellStyleMap.get(excelColumn);
+            ExcelColumn excelColumn = field.getDeclaredAnnotation(ExcelColumn.class);
+            CellStyle cellStyle = columnCellStyleMap.get(excelColumn);
             if (cellStyle != null) {
                 return cellStyle;
             }
-            final CellStyle newCellStyle = workbook.createCellStyle();
+            CellStyle newCellStyle = workbook.createCellStyle();
             if (field.getType() == OffsetDateTime.class) {
-                final CreationHelper creationHelper = workbook.getCreationHelper();
-                newCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat(DateTimeFormatter.BASIC_ISO_DATE.toString()));
+                CreationHelper creationHelper = workbook.getCreationHelper();
+                newCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("yyyy/mm/dd hh:mm:ss"));
             }
             columnCellStyleMap.put(excelColumn, newCellStyle);
             return newCellStyle;

@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
  */
 public class ExcelReader {
     private static final Logger logger = LoggerFactory.getLogger(ExcelReader.class);
+
+    private static final DateTimeFormatter SINGLE_DATE_FORMATTER = DateTimeFormatter.ofPattern("y/M/d").withZone(ZoneId.of("Asia/Shanghai"));
 
     /**
      * Read target path excel file to T class list instance.
@@ -139,12 +143,33 @@ public class ExcelReader {
 
     private static String getCellValueAsString(Cell cell) {
         final String cellValue;
-        if (CellType.NUMERIC == cell.getCellType()) {
+        if (CellType.FORMULA == cell.getCellType()) {
+            cellValue = formulaCellHandle(cell);
+        } else if (CellType.BLANK == cell.getCellType()) {
+            cellValue = null;
+        } else if (CellType.NUMERIC == cell.getCellType() && DateUtil.isCellDateFormatted(cell)) {
+            cellValue = SINGLE_DATE_FORMATTER.format(cell.getDateCellValue().toInstant());
+        } else if (CellType.NUMERIC == cell.getCellType()) {
             cellValue = NUMERIC_FORMATTER.format(cell.getNumericCellValue());
         } else {
             cellValue = cell.getStringCellValue();
         }
         return cellValue;
+    }
+
+    private static String formulaCellHandle(Cell cell) {
+        FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+        CellValue cellValue = evaluator.evaluate(cell);
+
+        final String value;
+        if (CellType.BLANK == cellValue.getCellType()) {
+            value = null;
+        } else if (CellType.NUMERIC == cellValue.getCellType()) {
+            value = NUMERIC_FORMATTER.format(cellValue.getNumberValue());
+        } else {
+            value = cell.getStringCellValue();
+        }
+        return value;
     }
 
     private static Object enumParser(Class<?> enumClass, String value) {

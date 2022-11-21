@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
+
 /**
  * Student
  *
@@ -21,7 +23,8 @@ public class Student {
     private Integer id;
     @ExcelColumn("name")
     private String name;
-
     @ExcelColumn("gander")
     private Gender gender;
+    @ExcelColumn("birth")
+    private OffsetDateTime birth;
 }

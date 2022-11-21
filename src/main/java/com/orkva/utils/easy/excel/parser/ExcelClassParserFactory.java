@@ -1,6 +1,9 @@
 package com.orkva.utils.easy.excel.parser;
 
 import com.orkva.utils.easy.excel.parser.impl.BasicClassParser;
+import com.orkva.utils.easy.excel.parser.impl.OffsetDateTimeExcelClassParser;
+
+import java.time.OffsetDateTime;
 
 /**
  * ExcelInstanceParserFactory
@@ -18,6 +21,7 @@ public final class ExcelClassParserFactory {
         ExcelClassParserRegister.register(Float.class, BasicClassParser.FLOAT_EXCEL_CLASS_PARSER);
         ExcelClassParserRegister.register(Double.class, BasicClassParser.DOUBLE_EXCEL_CLASS_PARSER);
         ExcelClassParserRegister.register(String.class, BasicClassParser.STRING_EXCEL_CLASS_PARSER);
+        ExcelClassParserRegister.register(OffsetDateTime.class, new OffsetDateTimeExcelClassParser());
     }
 
     public static <T> ExcelClassParser<T> getParser(Class<T> clazz) {
