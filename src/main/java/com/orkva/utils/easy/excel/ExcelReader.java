@@ -16,10 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -121,14 +118,19 @@ public class ExcelReader {
         }
         field.setAccessible(true);
 
-        ExcelClassParser<?> parser = ExcelClassParserFactory.getParser(field.getType());
-        if (parser == null) {
-            field.setAccessible(false);
-            String errorMsg = MessageFormat.format("Cannot find parser for {0} ", field.getType().getSimpleName());
-            logger.error(errorMsg);
-            throw new RuntimeException(errorMsg);
+        if (field.getType().isEnum()) {
+            Object eEnum = enumParser(field.getType(), value);
+            field.set(instance, eEnum);
+        } else {
+            ExcelClassParser<?> parser = ExcelClassParserFactory.getParser(field.getType());
+            if (parser == null) {
+                field.setAccessible(false);
+                String errorMsg = MessageFormat.format("Cannot find parser for {0} ", field.getType().getSimpleName());
+                logger.error(errorMsg);
+                throw new RuntimeException(errorMsg);
+            }
+            field.set(instance, parser.parse(value));
         }
-        field.set(instance, parser.parse(value));
 
         field.setAccessible(false);
     }
@@ -143,6 +145,31 @@ public class ExcelReader {
             cellValue = cell.getStringCellValue();
         }
         return cellValue;
+    }
+
+    private static Object enumParser(Class<?> enumClass, String value) {
+        final Object[] enumConstants = enumClass.getEnumConstants();
+        final Field nameField;
+        try {
+            nameField = enumClass.getDeclaredField("name");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("Cannot find attribute 'name' in Enum.", e);
+        }
+        nameField.setAccessible(true);
+        for (Object enumConstant : enumConstants) {
+            final Object name;
+            try {
+                name = nameField.get(enumConstant);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+            if (Objects.equals(name, value)) {
+                return enumConstant;
+            }
+        }
+        String enumNotFound = MessageFormat
+                .format("enumClass[{0}], value[{1}] cannot find pair enum", enumClass, value);
+        throw new RuntimeException(enumNotFound);
     }
 
 }

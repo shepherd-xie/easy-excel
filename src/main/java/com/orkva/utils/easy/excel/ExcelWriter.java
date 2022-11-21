@@ -58,11 +58,11 @@ public class ExcelWriter {
 
     public static final class ExcelSheetBuilder {
         private final ExcelWriterBuilder excelWriterBuilder;
-        private final Collection instances;
+        private final Collection<Object> instances;
         private String title;
         private final Class<?> clazz;
 
-        private ExcelSheetBuilder(Collection instances, ExcelWriterBuilder excelWriterBuilder) {
+        private ExcelSheetBuilder(Collection<Object> instances, ExcelWriterBuilder excelWriterBuilder) {
             this.instances = instances;
             this.excelWriterBuilder = excelWriterBuilder;
             this.title = "";
@@ -119,7 +119,7 @@ public class ExcelWriter {
             }
             ExcelSheetBuilder excelSheetBuilder = new ExcelSheetBuilder(instances, this);
             excelSheetBuilders.add(excelSheetBuilder);
-            if (instances.size() >= POI_SXSS_TRANSFER_COLUMN && !SXSSFSheet.class.isInstance(workbook)) {
+            if (instances.size() >= POI_SXSS_TRANSFER_COLUMN && !(workbook instanceof SXSSFSheet)) {
                 workbook = new SXSSFWorkbook();
             }
             return excelSheetBuilder;
@@ -260,6 +260,29 @@ public class ExcelWriter {
          * @return
          */
         private WriterCellBuilder<Object> classCellBuilder(Field field) {
+            if (Enum.class.isAssignableFrom(field.getType())) {
+                final ExcelColumn excelColumn = field.getDeclaredAnnotation(ExcelColumn.class);
+                try {
+                    final Field enumValueField = field.getType().getDeclaredField(excelColumn.enumValue());
+                    return (cell, value) -> {
+                        final Object enumValue;
+                        enumValueField.setAccessible(true);
+                        try {
+                            enumValue = enumValueField.get(value);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException("This field is not visible", e);
+                        } finally {
+                            enumValueField.setAccessible(false);
+                        }
+                        cell.setCellValue((String) enumValue);
+                    };
+                } catch (NoSuchFieldException e) {
+                    return (cell, value) -> {
+                        Enum anEnum = (Enum) value;
+                        cell.setCellValue(anEnum.name());
+                    };
+                }
+            }
             return CellTypeHandler.getWriterCellBuilder(field.getType());
         }
 

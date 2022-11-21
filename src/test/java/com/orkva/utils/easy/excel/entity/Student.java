@@ -2,6 +2,9 @@ package com.orkva.utils.easy.excel.entity;
 
 import com.orkva.utils.easy.excel.annotation.ExcelColumn;
 import com.orkva.utils.easy.excel.annotation.ExcelMapper;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Student
@@ -9,6 +12,9 @@ import com.orkva.utils.easy.excel.annotation.ExcelMapper;
  * @author Shepherd Xie
  * @version 2022/11/17
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @ExcelMapper("Student")
 public class Student {
     @ExcelColumn("id")
@@ -16,8 +22,6 @@ public class Student {
     @ExcelColumn("name")
     private String name;
 
-    public Student(Integer id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+    @ExcelColumn("gander")
+    private Gender gender;
 }

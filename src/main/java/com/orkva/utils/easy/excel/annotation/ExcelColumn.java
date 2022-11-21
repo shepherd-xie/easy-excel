@@ -13,4 +13,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface ExcelColumn {
     String value();
+
+    String enumValue() default "name";
 }

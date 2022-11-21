@@ -4,6 +4,8 @@ import com.orkva.utils.easy.excel.entity.Student;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
+
 /**
  * ExcelWriterTest
  *
@@ -14,7 +16,11 @@ public class ExcelReaderTest {
 
     @Test
     public void testRead() {
-        Assert.assertNotNull(ExcelReader.read(ClassLoader.getSystemResource("test_student.xlsx").getFile(), Student.class));
+        List<Student> students = ExcelReader.read(ClassLoader.getSystemResource("test_student.xlsx").getFile(), Student.class);
+        for (Student student : students) {
+            System.out.println(student);
+        }
+        Assert.assertNotNull(students);
     }
 
 }

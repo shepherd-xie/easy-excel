@@ -1,5 +1,6 @@
 package com.orkva.utils.easy.excel;
 
+import com.orkva.utils.easy.excel.entity.Gender;
 import com.orkva.utils.easy.excel.entity.Student;
 import org.junit.Test;
 
@@ -17,10 +18,10 @@ public class ExcelWriterTest {
     @Test
     public void testWrite() {
         List<Student> entities = new ArrayList<>();
-        entities.add(new Student(1, "Larry"));
-        entities.add(new Student(2, "Anna"));
-        entities.add(new Student(3, "Emma"));
-        entities.add(new Student(4, "White"));
+        entities.add(new Student(1, "Larry", Gender.MALE));
+        entities.add(new Student(2, "Anna", Gender.FEMALE));
+        entities.add(new Student(3, "Emma", Gender.FEMALE));
+        entities.add(new Student(4, "White", Gender.OTHER));
         ExcelWriter.write(entities, "./src/test/resources/test_export.xlsx");
     }
 
