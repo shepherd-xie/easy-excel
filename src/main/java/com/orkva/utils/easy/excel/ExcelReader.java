@@ -97,11 +97,16 @@ public class ExcelReader {
 
         for (int cellNum = 0; cellNum < parserFields.size(); cellNum ++) {
             Field field = parserFields.get(cellNum);
+            ExcelColumn excelColumn = field.getDeclaredAnnotation(ExcelColumn.class);
             Cell cell = row.getCell(cellNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
             final String cellValue = getCellValueAsString(cell);
             logger.debug("{}=>{}: {}", field.getName(), cell.getAddress(), cellValue);
 
             if (cellValue == null || cellValue.isEmpty()) {
+                if (excelColumn.required()) {
+                    final String message = MessageFormat.format("{0} cannot be null.", excelColumn.value());
+                    throw new RuntimeException(message);
+                }
                 continue;
             }
 
