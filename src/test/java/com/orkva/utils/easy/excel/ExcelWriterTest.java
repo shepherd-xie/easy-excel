@@ -4,8 +4,12 @@ import com.orkva.utils.easy.excel.entity.Gender;
 import com.orkva.utils.easy.excel.entity.Student;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -26,7 +30,22 @@ public class ExcelWriterTest {
         for (Student entity : entities) {
             System.out.println(entity);
         }
-        ExcelWriter.write(entities, "./src/test/resources/test_export.xlsx");
+        writeToFile(entities, "./src/test/resources/test_export.xlsx");
+    }
+
+    public static void writeToFile(Collection instances, String path) {
+        File exportFile = new File(path);
+        try {
+            boolean newFile = exportFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            ExcelWriter.write(instances, Files.newOutputStream(exportFile.toPath()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

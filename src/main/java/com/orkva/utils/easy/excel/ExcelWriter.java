@@ -1,10 +1,10 @@
 package com.orkva.utils.easy.excel;
 
 import com.orkva.utils.easy.excel.writer.ExcelWorkbookBuilder;
+import org.apache.poi.ss.usermodel.Workbook;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.OutputStream;
 import java.util.Collection;
 
 /**
@@ -18,18 +18,11 @@ public class ExcelWriter {
     /**
      * write excel file to path
      *
-     * @param path target path
+     * @param outputStream outputStream
      */
-    public static void write(Collection instances, String path) {
-        File exportFile = new File(path);
-        try {
-            exportFile.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            builder().addSheet(instances).build().write(Files.newOutputStream(exportFile.toPath()));
+    public static void write(Collection instances, OutputStream outputStream) {
+        try (Workbook workbook = builder().addSheet(instances).build()) {
+            workbook.write(outputStream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

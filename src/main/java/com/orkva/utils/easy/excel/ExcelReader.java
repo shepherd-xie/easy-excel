@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.ZoneId;
@@ -35,31 +36,30 @@ public class ExcelReader {
     /**
      * Read target path excel file to T class list instance.
      *
-     * @param path target path for excel file
+     * @param file excel file
      * @param clazz entity class of excel record
      * @param <T> entity class
      * @return parsed data list
      */
-    public static <T> List<T> read(String path, Class<T> clazz) {
-        logger.debug("Read file path: {}", path);
-        File sourceFile = new File(path);
-        if (!sourceFile.exists()) {
+    public static <T> List<T> read(File file, Class<T> clazz) {
+        if (file == null || !file.exists()) {
             throw new RuntimeException("Path file not find.");
         }
-        if (!sourceFile.isFile()) {
+        logger.debug("Read file path: {}", file.getAbsolutePath());
+        if (!file.isFile()) {
             throw new RuntimeException("There not a file in the path.");
         }
-        String sourceFileName = sourceFile.getName();
+        String sourceFileName = file.getName();
         final Workbook workbook;
         if (sourceFileName.endsWith(ExcelConstants.EXCEL_2007_SUFFIX)) {
             try {
-                workbook = new XSSFWorkbook(sourceFile);
+                workbook = new XSSFWorkbook(file);
             } catch (IOException | InvalidFormatException e) {
                 throw new RuntimeException(e);
             }
-        } else if (sourceFileName.equalsIgnoreCase(ExcelConstants.EXCEL_97_2003_SUFFIX)) {
+        } else if (sourceFileName.endsWith(ExcelConstants.EXCEL_97_2003_SUFFIX)) {
             try {
-                workbook = new HSSFWorkbook(new FileInputStream(sourceFile));
+                workbook = new HSSFWorkbook(Files.newInputStream(file.toPath()));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -4,6 +4,7 @@ import com.orkva.utils.easy.excel.entity.Student;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -16,7 +17,9 @@ public class ExcelReaderTest {
 
     @Test
     public void testRead() {
-        List<Student> students = ExcelReader.read(ClassLoader.getSystemResource("test_student.xlsx").getFile(), Student.class);
+
+        File sourceFile = new File(ClassLoader.getSystemResource("test_student.xlsx").getFile());
+        List<Student> students = ExcelReader.read(sourceFile, Student.class);
         for (Student student : students) {
             System.out.println(student);
         }
