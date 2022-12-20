@@ -2,18 +2,10 @@
 
 基于 `Apache POI` 的注解驱动的 Excel 解析工具。
 
-### 导出数据到 Excel：
+### 使用之前的准备
 
-```java
-Collection<Object> instances = new List<>();
-File exportFile = new File("/path/to/excel");
-exportFile.createNewFile();
-ExcelWriter.write(instances, Files.newOutputStream(exportFile.toPath()));
-```
+在使用读取或导出功能之前需要先创建实体类，创建的方式相当简单，只要在实体类上添加类注解 `@ExcelMapper` 和字段注解 `ExcelColumn` 即可。
 
-### 从 Excel 读取数据到程序中：
-
-1. 定义 Excel 解析后的实体类
 ```java
 @ExcelMapper("Student")
 public class Student {
@@ -27,13 +19,37 @@ public class Student {
     private OffsetDateTime birth;
 }
 ```
-2. 解析 Excel 返回实体类对象
+
+```java
+public enum Gender {
+    OTHER("Other", 0),
+    MALE("Male", 1),
+    FEMALE("Female", 2);
+
+    private String name;
+    private Integer value;
+}
+```
+
+### 导出数据到 Excel：
+
+```java
+Collection<Student> instances = new List<>();
+File exportFile = new File("/path/to/excel");
+exportFile.createNewFile();
+ExcelWriter.write(instances, Files.newOutputStream(exportFile.toPath()));
+```
+
+### 从 Excel 读取数据到程序中：
+
 ```java
 File file = new File(ClassLoader.getSystemResource("/path/to/excel").getFile());
 List<Student> students = ExcelReader.read(file, Student.class);
 ```
 
 ### 自定义类型解析
+
+EasyExcel 目前只支持基本数据类型，如果需要解析为其他 Java 类可以自定义解析类。
 
 1. 实现 `com.orkva.utils.easy.excel.parser.ExcelClassParser` 接口
 ```java
